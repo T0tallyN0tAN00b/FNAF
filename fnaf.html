@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Night Watch — FNAF-Inspired</title>
 <style>
   body { margin:0; font-family:sans-serif; background:#0b0f14; color:#e5e7eb; }
   #ui { display:grid; grid-template-columns:1fr 300px; gap:12px; padding:12px; height:100vh; box-sizing:border-box; }
   #office { position:relative; border:1px solid #223; border-radius:8px; background:#0d141d; overflow:hidden; }
   .statusbar { display:flex; gap:12px; padding:6px 10px; background:#111827; font-size:14px; }
-  .statusbar .value { font-weight:bold; }
   .door { position:absolute; top:0; bottom:0; width:100px; background:#0f172a; transition:transform 0.2s; }
   #doorLeft { left:0; transform:translateX(-100%); }
   #doorRight { right:0; transform:translateX(100%); }
@@ -25,6 +23,7 @@
   @keyframes flicker { from{opacity:0.9} to{opacity:1} }
   .camName { position:absolute; bottom:4px; left:4px; font-size:11px; color:#94a3b8; }
   .entity { position:absolute; width:40px; height:40px; border-radius:50%; background:#ef4444; filter:drop-shadow(0 0 12px rgba(239,68,68,0.75)); }
+  .player { position:absolute; width:30px; height:30px; border-radius:50%; background:#22c55e; filter:drop-shadow(0 0 8px rgba(34,197,94,0.7)); }
   #overlay { position:fixed; inset:0; background:black; display:none; align-items:center; justify-content:center; z-index:99; }
   #overlay.show { display:flex; }
   #overlay div { color:#ff2b2b; font-size:40px; font-weight:bold; }
@@ -58,6 +57,7 @@
       <li>Survive until 6:00 AM.</li>
       <li>Use C to toggle cameras.</li>
       <li>A/D close doors. Doors drain power.</li>
+      <li>Green circle = YOU (office). Red circles = enemies.</li>
     </ul>
     <button id="btnStart">Start</button>
     <button id="btnReset">Reset</button>
@@ -73,10 +73,18 @@ btnCam:document.getElementById('btnCam'),btnLeft:document.getElementById('btnLef
 monitor:document.getElementById('monitor'),cams:document.getElementById('cams'),
 overlay:document.getElementById('overlay'),win:document.getElementById('win'),
 btnStart:document.getElementById('btnStart'),btnReset:document.getElementById('btnReset')};
-for(let i=0;i<9;i++){const tile=document.createElement('div');tile.className='camTile';
-const name=document.createElement('div');name.className='camName';name.textContent='CAM '+(i+1);
-const ent=document.createElement('div');ent.className='entity';ent.style.display='none';
-tile.appendChild(name);tile.appendChild(ent);ui.cams.appendChild(tile);state.entities.push({route:[i],pos:0,el:ent});}
+// Build camera grid
+for(let i=0;i<9;i++){
+  const tile=document.createElement('div');tile.className='camTile';
+  const name=document.createElement('div');name.className='camName';name.textContent='CAM '+(i+1);
+  const ent=document.createElement('div');ent.className='entity';ent.style.display='none';
+  const player=document.createElement('div');player.className='player';player.style.display='none';
+  tile.appendChild(name);tile.appendChild(ent);tile.appendChild(player);
+  ui.cams.appendChild(tile);
+  state.entities.push({route:[i],pos:0,el:ent});
+  // Mark player location on CAM 7 (bottom center)
+  if(i===7){player.style.display='block';player.style.left='50%';player.style.top='50%';player.style.transform='translate(-50%,-50%)';}
+}
 function start(){state.running=true;loop();}
 function reset(){state.running=false;state.time=0;state.power=100;ui.overlay.classList.remove('show');ui.win.classList.remove('show');render();}
 function loop(){if(!state.running)return;state.time+=0.05;state.power-=0.02;moveEntities();render();
@@ -94,7 +102,3 @@ ui.btnCam.onclick=()=>{state.monitor=!state.monitor;render();};
 ui.btnLeft.onclick=()=>{state.leftDoor=!state.leftDoor;render();};
 ui.btnRight.onclick=()=>{state.rightDoor=!state.rightDoor;render();};
 document.addEventListener('keydown',e=>{if(e.key==='c')ui.btnCam.click();if(e.key==='a')ui.btnLeft.click();if(e.key==='d')ui.btnRight.click();});
-reset();
-</script>
-</body>
-</html>
